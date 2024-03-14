@@ -91,37 +91,90 @@ std::ostream& operator<<(std::ostream& out, const Connection& c) {
 
 // STUDENT TODO: IMPLEMENT
 void Graph::updateNode(int id, NodeInfo n) {
-    if (true /* stub condition: change this to the correct condition*/) {
+
+    if (id < 0 || id >= nodes.size())
+    {
         cout << "Attempting to update node with id: " << id << " but node does not exist" << endl;
         return;
     }
-
-    return; //stub
+    
+    NodeInfo* NodeUpd = nodes[id];
+    if (NodeUpd != nullptr)
+    {
+        *NodeUpd = n; 
+    }else
+    {
+        NodeInfo* newNodeInfo = new NodeInfo(n);
+        nodes[id] = newNodeInfo;
+    }
+    return;
 }
+
+
 
 // STUDENT TODO: IMPLEMENT
 NodeInfo* Graph::getNode(int id) const {
+    for (int i = 0; i < nodes.size(); ++i)
+    {
+        if (i == id)
+        {
+            return nodes[i];
+        }
+    }
     return nullptr; //stub
 }
 
+
+
+
 // STUDENT TODO: IMPLEMENT
+//v is source ID
+//U is destination ID
+//w is weight
 void Graph::updateConnection(int v, int u, double w) {
-    if (true /* stub condition: change this to the correct condition*/) {
+    bool checkv = false;
+    if (v >= 0 && v < nodes.size()) checkv = true;
+
+    bool checku = false;
+    if (u >= 0 && u < nodes.size()) checku = true;
+
+
+    if (!checkv) {
         cerr << "Attempting to update connection between " << v << " and " << u << " with weight " << w << " but " << v << " does not exist" << endl;
         exit(1);
     }
-    if (true /* stub condition: change this to the correct condition*/) {
+    if (!checku) {
         cerr << "Attempting to update connection between " << v << " and " << u << " with weight " << w << " but " << u << " does not exist" << endl;
         exit(1);
     }
-    
+    //TEMPTEMPTEMPTEMP
+    // for (int i = 0; i < adjacencyList.size(); ++i)
+    // {
+    //     if (i == v)
+    //     {
+    //         ((adjacencyList[i])[u]).weight = w;
+    //         ((adjacencyList[i])[u]).dest = u;
+    //         ((adjacencyList[i])[u]).source = v;
+    //     }
+    // }
+    adjacencyList[v][u] = Connection(v, u, w);
     return; //stub
+
+
 }
 
 // STUDENT TODO: IMPLEMENT
 void Graph::clear() {
+    for (NodeInfo* Node: nodes)
+    {
+        delete Node;
+    }
+
+    nodes.clear();
+    adjacencyList.clear();
     return; //stub
-}
+    }
+    
 
 
 
