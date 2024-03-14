@@ -148,12 +148,11 @@ bool NeuralNetwork::contribute(double y, double p) {
     // find each incoming contribution, and contribute to the input layer's outgoing weights
     // If the node is already found, use its precomputed contribution from the contributions map
     // There is no need to visitContributeNode for the input layer since there is no bias to update.
-    for(int outputNodeId : outputNodeIds) 
-    {
-
-        contribute(outputNodeId, y, p);
-    }
     
+    for (auto& input : inputNodeIds)
+    {
+        contribute(input,y,p);
+    }
 
 
     flush();
@@ -171,18 +170,29 @@ double NeuralNetwork::contribute(int nodeId, const double& y, const double& p) {
     // find each incoming contribution, and contribute to the nodes outgoing weights
     // If the node is already found, use its precomputed contribution from the contributions map
 
-
+    
 
     //AdjacencyList.at(nodeId is always empty)
+
+    // bool b = adjacencyList.at(nodeId).empty();
+    // cout << b << endl;
+    //OUTPUTS HAVE NO CONNECTIONS
     
     if (adjacencyList.at(nodeId).empty()) {
         // base case, we are at the end
         outgoingContribution = -1 * ((y - p) / (p * (1 - p)));
-        
     }
-        
-        
     
+    for (auto& neighbor : adjacencyList[nodeId])
+    {
+        int neighborID = neighbor.first;
+        Connection& connection = neighbor.second;
+        incomingContribution = contribute(neighborID, y , p);
+        visitContributeNeighbor(connection,incomingContribution,outgoingContribution);
+        visitContributeNode(neighborID, outgoingContribution);
+
+
+    }
 
     
     
@@ -229,7 +239,7 @@ bool NeuralNetwork::update() {
         for (auto& ind : adjacencyList[nID])
         {
             Connection& c = ind.second;
-            double newWeight = c.weight - (this->learningRate * n->delta);
+            double newWeight = c.weight - (this->learningRate * c.delta);
             c.weight = newWeight;
             c.delta =0;
             int neighborID = ind.first;
@@ -241,7 +251,7 @@ bool NeuralNetwork::update() {
             }
         }
 
-
+        //
         // for (auto& ind : adjacencyList[nID])
         // {
         //     int neighborID = ind.first;
@@ -260,7 +270,6 @@ bool NeuralNetwork::update() {
         //         connect.delta =0;
         //     }
 
-            // FIX ME
             // if (!visited[neighborID])
             // {
             //     q.push(neighborID);
