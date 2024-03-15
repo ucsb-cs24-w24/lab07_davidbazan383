@@ -104,8 +104,7 @@ void Graph::updateNode(int id, NodeInfo n) {
         *NodeUpd = n; 
     }else
     {
-        NodeInfo* newNodeInfo = new NodeInfo(n);
-        nodes[id] = newNodeInfo;
+        nodes[id] = new NodeInfo(n);
     }
     return;
 }

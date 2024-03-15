@@ -49,7 +49,9 @@ vector<int> NeuralNetwork::getOutputNodeIds() const {
 vector<double> NeuralNetwork::predict(DataInstance instance) {
 
     vector<double> input = instance.x;
+    
 
+    
     // error checking : size mismatch
     if (input.size() != inputNodeIds.size()) {
         cerr << "input size mismatch." << endl;
@@ -67,11 +69,21 @@ vector<double> NeuralNetwork::predict(DataInstance instance) {
 
     vector <bool> visited (nodes.size(),false);
 
+    
+
     for (int node : inputNodeIds)
         {
             q.push(node);
             visited.at(node) = true;
+            
+            
             nodes.at(node)->preActivationValue = input[node];
+
+            // cout << node << ": " << endl;
+            // cout << nodes.at(node)->preActivationValue << endl << endl;
+
+            
+            
         }
 
     while (!q.empty())
@@ -80,12 +92,22 @@ vector<double> NeuralNetwork::predict(DataInstance instance) {
         q.pop();
 
         visitPredictNode(nID);
+        
+
+
+        // cout << nID << ": " << endl;
+        // cout << nodes.at(nID)->postActivationValue << endl << endl;
+
 
         for (auto& ind : adjacencyList[nID])
         {
             int neighborID = ind.first;
             Connection& c = ind.second;
+            
             visitPredictNeighbor(c);
+            
+            // cout << nodes.at(nID)->postActivationValue << endl;
+            // cout << nodes.at(nID)->preActivationValue << endl;
             // cout << (ind.second) << endl;
             if (!visited[neighborID])
             {
@@ -95,19 +117,7 @@ vector<double> NeuralNetwork::predict(DataInstance instance) {
             
         }
     }
-    /*
-    FOR CONTEXT:
-    void NeuralNetwork::visitPredictNeighbor(Connection c) {
-    NodeInfo* v = nodes.at(c.source);
-    NodeInfo* u = nodes.at(c.dest);
-    double w = c.weight;
-    u->preActivationValue += v->postActivationValue * w;
-}
     
-    
-    */
-    
-
 
 
 
@@ -119,8 +129,17 @@ vector<double> NeuralNetwork::predict(DataInstance instance) {
     for (int i = 0; i < outputNodeIds.size(); i++) {
         int dest = outputNodeIds.at(i);
         NodeInfo* outputNode = nodes.at(dest);
+        // cout << *nodes.at(dest) << endl;
+
         output.push_back(outputNode->postActivationValue);
+    
+         
     }
+    
+    // for (auto ind : output)
+    // {
+    //     cout << ind << endl << endl;
+    // }
 
     if (evaluating) {
         flush();
@@ -130,6 +149,13 @@ vector<double> NeuralNetwork::predict(DataInstance instance) {
         // accumulate derivatives. If in training mode, weights and biases get accumulated
         contribute(instance.y, output.at(0));
     }
+    //DEBUGGER 3
+    // cout << "Output: ";
+    // for (double value : output) {
+    //     cout << value << " ";
+    // }
+    // cout << endl;
+    
     return output;
 }
 
@@ -164,6 +190,11 @@ bool NeuralNetwork::contribute(double y, double p) {
 // STUDENT TODO: IMPLEMENT
 double NeuralNetwork::contribute(int nodeId, const double& y, const double& p) {
 
+    if (contributions.find(nodeId) != contributions.end()) 
+    {
+        return contributions[nodeId];
+    }
+    
     double incomingContribution = 0;
     double outgoingContribution = 0;
     NodeInfo* currNode = nodes.at(nodeId);
@@ -181,7 +212,7 @@ double NeuralNetwork::contribute(int nodeId, const double& y, const double& p) {
     if (adjacencyList.at(nodeId).empty()) {
         // base case, we are at the end
         outgoingContribution = -1 * ((y - p) / (p * (1 - p)));
-    }
+    }else{
     
     for (auto& neighbor : adjacencyList[nodeId])
     {
@@ -189,16 +220,18 @@ double NeuralNetwork::contribute(int nodeId, const double& y, const double& p) {
         Connection& connection = neighbor.second;
         incomingContribution = contribute(neighborID, y , p);
         visitContributeNeighbor(connection,incomingContribution,outgoingContribution);
-        visitContributeNode(neighborID, outgoingContribution);
+        
 
 
     }
+    }
+    visitContributeNode(nodeId, outgoingContribution);
 
     
     
 
     // Now contribute to yourself and prepare the outgoing contribution
-
+    contributions[nodeId] = outgoingContribution;
     return outgoingContribution;
 }
 
@@ -232,15 +265,23 @@ bool NeuralNetwork::update() {
         q.pop();
 
         NodeInfo* n = nodes.at(nID);
-
-        double newBias = n->bias - (this->learningRate * n->delta);
-        n->bias = newBias;
+        // cout << "Node: " << nID << endl;
+        // cout << "Original Bias:" << n->bias << endl;
+        // double newBias = n->bias - (this->learningRate * n->delta);
+        
+        // cout <<"Learning Rate: " << learningRate << endl;
+        // cout << "Delta: " << n->delta << endl;
+        
+        n->bias = n->bias - learningRate * n->delta;
         n->delta =0;
+
+        // cout <<"Bias Updated: " << n->bias << endl << endl;
+
         for (auto& ind : adjacencyList[nID])
         {
             Connection& c = ind.second;
-            double newWeight = c.weight - (this->learningRate * c.delta);
-            c.weight = newWeight;
+            // double newWeight = c.weight - (this->learningRate * c.delta);
+            c.weight = c.weight - learningRate * c.delta;
             c.delta =0;
             int neighborID = ind.first;
             
@@ -251,33 +292,9 @@ bool NeuralNetwork::update() {
             }
         }
 
-        //
-        // for (auto& ind : adjacencyList[nID])
-        // {
-        //     int neighborID = ind.first;
-        //     Connection& c = ind.second;
-
-        //     NodeInfo* m = nodes.at(neighborID);
-        //     double newBias2 = m->bias - (this->learningRate * m->delta);
-        //     double newWeight2 = c.weight - (this->learningRate * c.delta);
-        //     m->bias = newBias2;
-        //     m->delta=0;
-        //     for (auto& index : adjacencyList[neighborID])
-        //     {
-        //         Connection& connect = ind.second;
-        //         double newWeight = connect.weight - (this->learningRate * n->delta);
-        //         connect.weight = newWeight;
-        //         connect.delta =0;
-        //     }
-
-            // if (!visited[neighborID])
-            // {
-            //     q.push(neighborID);
-            //     visited[neighborID] = true;
-            // }
-            
-        // }
     }
+
+    
 
     // use the formulas for each update
     // bias update: bias = bias - (learningRate * delta)
