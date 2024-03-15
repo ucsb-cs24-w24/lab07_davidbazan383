@@ -190,11 +190,6 @@ bool NeuralNetwork::contribute(double y, double p) {
 // STUDENT TODO: IMPLEMENT
 double NeuralNetwork::contribute(int nodeId, const double& y, const double& p) {
 
-    if (contributions.find(nodeId) != contributions.end()) 
-    {
-        return contributions[nodeId];
-    }
-    
     double incomingContribution = 0;
     double outgoingContribution = 0;
     NodeInfo* currNode = nodes.at(nodeId);
@@ -212,7 +207,7 @@ double NeuralNetwork::contribute(int nodeId, const double& y, const double& p) {
     if (adjacencyList.at(nodeId).empty()) {
         // base case, we are at the end
         outgoingContribution = -1 * ((y - p) / (p * (1 - p)));
-    }else{
+    }
     
     for (auto& neighbor : adjacencyList[nodeId])
     {
@@ -220,18 +215,16 @@ double NeuralNetwork::contribute(int nodeId, const double& y, const double& p) {
         Connection& connection = neighbor.second;
         incomingContribution = contribute(neighborID, y , p);
         visitContributeNeighbor(connection,incomingContribution,outgoingContribution);
-        
+        visitContributeNode(neighborID, outgoingContribution);
 
 
     }
-    }
-    visitContributeNode(nodeId, outgoingContribution);
 
     
     
 
     // Now contribute to yourself and prepare the outgoing contribution
-    contributions[nodeId] = outgoingContribution;
+
     return outgoingContribution;
 }
 
