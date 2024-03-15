@@ -45,7 +45,7 @@ vector<int> NeuralNetwork::getOutputNodeIds() const {
 
 
 
-// STUDENT TODO: IMPLEMENT
+// // STUDENT TODO: IMPLEMENT
 vector<double> NeuralNetwork::predict(DataInstance instance) {
 
     vector<double> input = instance.x;
@@ -103,7 +103,7 @@ vector<double> NeuralNetwork::predict(DataInstance instance) {
         {
             int neighborID = ind.first;
             Connection& c = ind.second;
-            
+            updateConnection(nID,ind.first,ind.second.weight);
             visitPredictNeighbor(c);
             
             // cout << nodes.at(nID)->postActivationValue << endl;
@@ -157,8 +157,8 @@ vector<double> NeuralNetwork::predict(DataInstance instance) {
     // cout << endl;
     
     return output;
-}
 
+}
 
 
 
@@ -219,7 +219,6 @@ double NeuralNetwork::contribute(int nodeId, const double& y, const double& p) {
 
 
     }
-
     
     
 
