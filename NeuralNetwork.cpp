@@ -1,4 +1,4 @@
-//David Bazan and Fabian Mendoza
+//David Bazan and Fabian Mendoza Ortega
 // includes
 #include "NeuralNetwork.hpp"
 using namespace std;
@@ -45,12 +45,10 @@ vector<int> NeuralNetwork::getOutputNodeIds() const {
 
 
 
-// // STUDENT TODO: IMPLEMENT
+// STUDENT TODO: IMPLEMENT
 vector<double> NeuralNetwork::predict(DataInstance instance) {
 
     vector<double> input = instance.x;
-    
-
     
     // error checking : size mismatch
     if (input.size() != inputNodeIds.size()) {
@@ -68,61 +66,53 @@ vector<double> NeuralNetwork::predict(DataInstance instance) {
     // 2. Start visiting nodes using the queue
 
     vector <bool> visited (nodes.size(),false);
-
     
-
+    int count = 0;
     for (int node : inputNodeIds)
         {
+            nodes.at(node)->preActivationValue = input[count];
             q.push(node);
-            visited.at(node) = true;
-            
-            
-            nodes.at(node)->preActivationValue = input[node];
-
+            count++;
+            // visited.at(node) = true;
             // cout << node << ": " << endl;
             // cout << nodes.at(node)->preActivationValue << endl << endl;
-
-            
-            
         }
 
     while (!q.empty())
     {
         int nID = q.front();
-        q.pop();
+        if(visited.at(nID))
+        {
+            q.pop();
+            continue;
+
+        }
 
         visitPredictNode(nID);
+
+        visited.at(nID) = true;
+
+        q.pop();
         
-
-
         // cout << nID << ": " << endl;
         // cout << nodes.at(nID)->postActivationValue << endl << endl;
-
 
         for (auto& ind : adjacencyList[nID])
         {
             int neighborID = ind.first;
             Connection& c = ind.second;
-            updateConnection(nID,ind.first,ind.second.weight);
-            visitPredictNeighbor(c);
-            
-            // cout << nodes.at(nID)->postActivationValue << endl;
-            // cout << nodes.at(nID)->preActivationValue << endl;
-            // cout << (ind.second) << endl;
+
             if (!visited[neighborID])
             {
                 q.push(neighborID);
-                visited[neighborID] = true;
+                updateConnection(nID,neighborID,c.weight);
+                visitPredictNeighbor(c);
             }
-            
+            // cout << nodes.at(nID)->postActivationValue << endl;
+            // cout << nodes.at(nID)->preActivationValue << endl;
+            // cout << (ind.second) << endl;
         }
     }
-    
-
-
-
-    
-
 
     vector<double> output;
 
@@ -132,7 +122,6 @@ vector<double> NeuralNetwork::predict(DataInstance instance) {
         // cout << *nodes.at(dest) << endl;
 
         output.push_back(outputNode->postActivationValue);
-    
          
     }
     
@@ -159,9 +148,6 @@ vector<double> NeuralNetwork::predict(DataInstance instance) {
     return output;
 
 }
-
-
-
 
 
 // STUDENT TODO: IMPLEMENT
@@ -199,10 +185,6 @@ double NeuralNetwork::contribute(int nodeId, const double& y, const double& p) {
     
 
     //AdjacencyList.at(nodeId is always empty)
-
-    // bool b = adjacencyList.at(nodeId).empty();
-    // cout << b << endl;
-    //OUTPUTS HAVE NO CONNECTIONS
     
     if (adjacencyList.at(nodeId).empty()) {
         // base case, we are at the end
@@ -217,18 +199,12 @@ double NeuralNetwork::contribute(int nodeId, const double& y, const double& p) {
         visitContributeNeighbor(connection,incomingContribution,outgoingContribution);
         visitContributeNode(neighborID, outgoingContribution);
 
-
     }
     
-    
-
     // Now contribute to yourself and prepare the outgoing contribution
 
     return outgoingContribution;
 }
-
-
-
 
 // STUDENT TODO: IMPLEMENT
 bool NeuralNetwork::update() {
