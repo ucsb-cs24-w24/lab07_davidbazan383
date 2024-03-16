@@ -147,17 +147,15 @@ void Graph::updateConnection(int v, int u, double w) {
         cerr << "Attempting to update connection between " << v << " and " << u << " with weight " << w << " but " << u << " does not exist" << endl;
         exit(1);
     }
-    //TEMPTEMPTEMPTEMP
-    // for (int i = 0; i < adjacencyList.size(); ++i)
-    // {
-    //     if (i == v)
-    //     {
-    //         ((adjacencyList[i])[u]).weight = w;
-    //         ((adjacencyList[i])[u]).dest = u;
-    //         ((adjacencyList[i])[u]).source = v;
-    //     }
-    // }
-    adjacencyList[v][u] = Connection(v, u, w);
+    for (int i = 0; i < adjacencyList.size(); ++i)
+    {
+        if (i == v)
+        {
+            ((adjacencyList[i])[u]).weight = w;
+            ((adjacencyList[i])[u]).dest = u;
+            ((adjacencyList[i])[u]).source = v;
+        }
+    }
     return; //stub
 
 

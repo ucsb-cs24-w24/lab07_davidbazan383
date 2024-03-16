@@ -113,6 +113,7 @@ vector<double> NeuralNetwork::predict(DataInstance instance) {
             // cout << (ind.second) << endl;
         }
     }
+    
 
     vector<double> output;
 
@@ -150,6 +151,7 @@ vector<double> NeuralNetwork::predict(DataInstance instance) {
 }
 
 
+
 // STUDENT TODO: IMPLEMENT
 bool NeuralNetwork::contribute(double y, double p) {
 
@@ -160,10 +162,24 @@ bool NeuralNetwork::contribute(double y, double p) {
     // find each incoming contribution, and contribute to the input layer's outgoing weights
     // If the node is already found, use its precomputed contribution from the contributions map
     // There is no need to visitContributeNode for the input layer since there is no bias to update.
+
+    // for(int inputNodeId : inputNodeIds) {
+    //     contribute(inputNodeId, y, p);
+    // }
     
-    for (auto& input : inputNodeIds)
+    for (int i = 0; i < inputNodeIds.size(); i++) 
     {
-        contribute(input,y,p);
+        for (auto& neighbor : adjacencyList[i]) 
+        {
+            int neighborID = neighbor.first;
+            Connection& connection = neighbor.second;
+            if (contributions.find(neighborID) == contributions.end()) 
+            {
+                contributions[neighborID] = contribute(neighborID, y, p);
+            }
+            incomingContribution = contributions[neighborID];
+            visitContributeNeighbor(connection, incomingContribution, outgoingContribution);
+        }
     }
 
 
@@ -189,18 +205,28 @@ double NeuralNetwork::contribute(int nodeId, const double& y, const double& p) {
     if (adjacencyList.at(nodeId).empty()) {
         // base case, we are at the end
         outgoingContribution = -1 * ((y - p) / (p * (1 - p)));
+    }else {
+        for (auto& neighbor : adjacencyList[nodeId]) 
+        {
+            int neighborID = neighbor.first;
+            Connection& connection = neighbor.second;
+            if (contributions.find(neighborID) == contributions.end()) 
+            {
+                contributions[neighborID] = contribute(neighborID, y, p);
+            }
+            incomingContribution = contributions[neighborID];
+            visitContributeNeighbor(connection, incomingContribution, outgoingContribution);
+        }
     }
-    
-    for (auto& neighbor : adjacencyList[nodeId])
-    {
-        int neighborID = neighbor.first;
-        Connection& connection = neighbor.second;
-        incomingContribution = contribute(neighborID, y , p);
-        visitContributeNeighbor(connection,incomingContribution,outgoingContribution);
-        visitContributeNode(neighborID, outgoingContribution);
-
-    }
-    
+    visitContributeNode(nodeId, outgoingContribution);
+    // for (auto& neighbor : adjacencyList[nodeId]) {
+    //     int neighborID = neighbor.first;
+    //     Connection& connection = neighbor.second;
+    //     incomingContribution = contribute(neighborID, y, p);
+    //     visitContributeNeighbor(connection, incomingContribution, outgoingContribution);
+    //     visitContributeNode(neighborID, outgoingContribution);
+    // }
+ 
     // Now contribute to yourself and prepare the outgoing contribution
 
     return outgoingContribution;
